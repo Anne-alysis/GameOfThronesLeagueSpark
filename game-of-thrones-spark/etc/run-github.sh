@@ -6,7 +6,6 @@ jar=SCRUBBED
 localpath=SCRUBBED
 
 week=1
-createquestionstructure=false
 
 cluster=SCRUBBED
 class=com.github.annealysis.gameofthrones.Score
@@ -25,6 +24,4 @@ gcloud dataproc jobs submit spark \
     --jars=${jar} \
     --class=${class} \
     -- ${path} \
-    ${week} \
-    ${createquestionstructure}
-
+    ${week}
