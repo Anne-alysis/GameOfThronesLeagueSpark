@@ -20,8 +20,8 @@ class Score extends StrictLogging with Spark {
     questionsDF.show(5)
 
     if (createAnswerFlag) {
-      logger.info("Creating template for correct answers to be populated... ")
-      questionsDF.write.csv(s"$bucket/$answerStructureFile")
+      logger.info("Writing answer structure file... ")
+      InputHandling.writeAnswerStructure(questionsDF, s"$bucket/$answerStructureFile")
     }
 
     logger.info("Reading in correct answers...")

@@ -120,4 +120,12 @@ object InputHandling {
   }
 
 
+  def writeAnswerStructure(df: DataFrame, bucketPath: String): Unit = {
+    df.
+      repartition(1)
+      .orderBy("questionNumber")
+      .write.csv(bucketPath)
+  }
+
+
 }
