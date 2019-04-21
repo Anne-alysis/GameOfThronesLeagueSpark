@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
   * Generates a default SparkSession with sane logging and appropriate performance settings for a local
   * emulation vs. being run as a job on a Spark server
   *
-  * Note: this is not my code but borrowed so the program can run.
+  * Note: this is not my code but borrowed from Dane G so the program can run.
   */
 
 object DefaultSparkSession {

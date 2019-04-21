@@ -4,7 +4,7 @@ import org.apache.spark.sql.SparkSession
 
 /*
 
-Note: this is not my code but borrowed so the program can run.
+Note: this is not my code but borrowed from Dane G so the program can run.
 
  */
 

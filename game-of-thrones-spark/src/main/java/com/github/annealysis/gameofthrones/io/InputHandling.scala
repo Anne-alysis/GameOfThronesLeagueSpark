@@ -21,12 +21,7 @@ object InputHandling {
     val colsToMelt = renamedDF.columns.filter(_.startsWith("Q"))
     val newCols = Seq("questionNumber", "answer")
 
-    val meltDF = Utilities.melt(
-      renamedDF,
-      colsToKeep,
-      colsToMelt,
-      newCols
-    )
+    val meltDF = Utilities.melt(renamedDF, colsToKeep, colsToMelt, newCols)
 
     val finalDF = splitHybridQuestion(meltDF)
 
@@ -81,7 +76,7 @@ object InputHandling {
   def renameColumns(df: DataFrame): DataFrame = {
 
     val questionCount = df.columns.length - 4
-    val numberedQuestions = (0 until questionCount).map("Q" + "0%1d".format(_))
+    val numberedQuestions = (0 until questionCount).map("Q" + "%02d".format(_))
 
     val newColNames: Seq[String] = Seq("name", "team", "payType", "splitType") ++ numberedQuestions
 
@@ -123,9 +118,20 @@ object InputHandling {
   def writeAnswerStructure(df: DataFrame, bucketPath: String): Unit = {
     df.
       repartition(1)
-      .orderBy("questionNumber")
-      .write.csv(bucketPath)
+      .write
+      .mode("overwrite")
+      .option("header", "true")
+      .csv(bucketPath)
   }
 
+
+  def readExcel(fileName: String)(implicit spark: SparkSession): DataFrame = spark.read
+    .format("com.crealytics.spark.excel")
+    // .option("dataAddress", sheet) // Required
+    .option("useHeader", "true")
+    .option("treatEmptyValuesAsNulls", "true")
+    .option("inferSchema", "true")
+    .option("addColorColumns", "False")
+    .load(fileName)
 
 }
