@@ -1,18 +1,26 @@
 package com.github.annealysis.gameofthrones.io
 
 import com.github.annealysis.gameofthrones.common.Utilities
+import com.typesafe.scalalogging.StrictLogging
 import org.apache.spark.sql.functions.{col, concat, format_string, lit, split, trim}
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object InputHandling {
+object InputHandling extends StrictLogging {
 
-  def apply(responsesFile: String)(implicit spark: SparkSession): (DataFrame, DataFrame) = {
+  def apply(week: Int, responsesFiles: Seq[String])(implicit spark: SparkSession): DataFrame = {
 
-    val initialDF = spark.read.option("header", "true").csv(responsesFile)
-      .drop("Timestamp")
+    // read in previously formed file, if not first week
+    if (week > 1) {
+      logger.info("Reading in previously reshaped response file... ")
+      return spark.read.option("header", "true").csv(responsesFiles(2))
+    }
+
+    //otherwise, reshape the responses
+    val initialDF = spark.read.option("header", "true").csv(responsesFiles(0)).drop("Timestamp")
 
     val questionsDF = extractQuestions(initialDF)
+    writeAnswerStructure(questionsDF, responsesFiles(1))
 
     // rename columns and append question numbers with padding
     val renamedDF = renameColumns(initialDF)
@@ -25,7 +33,14 @@ object InputHandling {
 
     val finalDF = splitHybridQuestion(meltDF)
 
-    (finalDF, questionsDF)
+    // write out restructured file for reading in subsequent weeks
+    finalDF.repartition(1)
+      .write
+      .mode("overwrite")
+      .option("header", "true")
+      .csv(responsesFiles(2))
+
+    finalDF
 
   }
 
@@ -52,8 +67,10 @@ object InputHandling {
     val personDF = questionPointsDF
       .filter($"containsPerson")
       .drop("containsPerson")
-      .withColumn("person", concat(lit("["), split($"questionFull", "\\[").getItem(1)))
-      .withColumn("question", concat($"questionFragment", lit(" "), $"person"))
+      .withColumn("person",
+        concat(lit("["), split($"questionFull", "\\[").getItem(1)))
+      .withColumn("question",
+        concat($"questionFragment", lit(" "), $"person"))
       .select(arrangedColNames.head, arrangedColNames.tail: _*)
 
     nonpersonDF.union(personDF).orderBy("questionNumber")

@@ -56,6 +56,7 @@ object Calculations {
       .agg(sum("score").as("score"))
       .orderBy(desc("score"))
       .withColumn("rank", rank.over(w))
+      .select("team", "payType", "rank", "score")
 
 
   }

@@ -39,18 +39,20 @@ only.  All files to run the jar are stored and accessed from GCS.
 
 Note, the algorithm was tested with a mock answer sheet as well (`correct_answer_testing.xlsx`).
 
-# Running the code
+# Compiling and running the code
 
-Each week an argument is read in to indicate the value of the week (e.g., 1 - 6). The `week` variable must be changed via the shell script.  After replacing the scrubbed variables in the script, it can be run via:
+The code is compiled using Maven: `mvn -pl game-of-thrones-spark package`.  The compiled jar is pushed to GCS via the below
+shell script so it can be run on a Dataproc cluster.  
+
+Each week an argument is read in to indicate the value of the week (e.g., 1 - 6). The `week` variable must be changed via the shell script.  
+After replacing the scrubbed variables in the script, it can be run via:
 
 `sh game-of-thrones-spark/etc/run-github.sh`
-
-There is also a flag to be set in the shell script, `createquestionstructure`, that allows the structure of the questions to be written to a file for ease of building the correct answer sheet.
 
 # Classes
 ## `Score.scala`
 
-This is the main class which includes all steps outlined above.  It includes a companion object that stores the filenames and reads in the arguments from the shell script: storage bucket (`bucket`), week (`week`), and the boolean question structure flag (`createQuestionStructure`).  
+This is the main class which includes all steps outlined above.  It includes a companion object that stores the filenames and reads in the arguments from the shell script: storage bucket (`bucket`) and week (`week`).  
 
 The class (not companion object) extends a trait in `common/Utilities.scala` that creates the Spark session, which is then passed implicitly to all other methods that require a Spark session.  
 
@@ -67,8 +69,10 @@ A custom DataFrame melt method is stored here that transforms wide data into lon
 ### `InputHandling.scala`
 
 This object handles all the input operations, such as:
- * Reading in responses and reshaping that data
- * Creating the structure of the question sheet
+ * Reading in responses and reshaping that data 
+    * If `week == 1`, the raw data will be reshaped and written to a file.  For subsequent weeks,
+    this data will be read in from this file, instead of being reshaped each time, which is inefficient and unnecessary.
+ * Creating the structure of the question sheet, for first week only.  
  
  ### `OutputHandling.scala`
 
