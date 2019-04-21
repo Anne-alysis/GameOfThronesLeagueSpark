@@ -7,16 +7,16 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object Calculations {
 
-  def apply(responsesDF: DataFrame, correctAnswerDF: DataFrame)(implicit spark: SparkSession): DataFrame = {
+  def apply(responsesDF: DataFrame, correctAnswerDF: DataFrame, bucketPath: String)(implicit spark: SparkSession): DataFrame = {
     import spark.implicits._
 
-    val mergedDF = responsesDF.join(correctAnswerDF, Seq("questionNumber"), "left")
+    val mergedDF: DataFrame = responsesDF.join(correctAnswerDF, Seq("questionNumber"), "left")
       .withColumn("correct", checkCorrectUDF($"include", $"multipleAnswers", $"answer", $"correctAnswer"))
       .withColumn("score", $"correct".cast(IntegerType) * $"points")
 
-    //mergedDF.repartition(1).write.mode("overwrite").csv(s"$bucket/raw_results.csv")
+    mergedDF.repartition(1).write.mode("overwrite").option("header", "true").csv(s"$bucketPath")
 
-    val aggregateDF = aggregateResults(mergedDF)
+    val aggregateDF: DataFrame = aggregateResults(mergedDF)
 
     aggregateDF
   }
@@ -24,9 +24,8 @@ object Calculations {
   val checkCorrectUDF = udf((include: Boolean, multipleAnswers: Boolean, answer: String, correctAnswer: String) => {
 
     if (!include) {
-      null
+      false
     } else {
-
       if (multipleAnswers) {
         // remove all punctuation and make all letters lower case
         val answerMunged = mungeAnswers(answer)
@@ -35,13 +34,10 @@ object Calculations {
         correctAnswerMunged.contains(answerMunged)
 
       } else {
-
         answer == correctAnswer
-
       }
     }
   }
-
   )
 
 
@@ -53,7 +49,6 @@ object Calculations {
 
 
   def aggregateResults(df: DataFrame): DataFrame = {
-
 
     val w = Window.orderBy(col("score").desc)
 

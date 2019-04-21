@@ -29,7 +29,7 @@ class Score extends StrictLogging with Spark {
     val correctAnswerDF = InputHandling.readExcel(s"$bucket/$correctAnswersFile")
 
     logger.info("Scoring the responses... ")
-    val scoredDF = Calculations(responsesDF, correctAnswerDF)
+    val scoredDF = Calculations(responsesDF, correctAnswerDF, s"$bucket/$rawResultsFile")
 
     logger.info("Combining previous weeks' scores, if applicable ... ")
     val combinedWeeksScoreDF = OutputHandling.combinePreviousScores(scoredDF, week, s"$bucket/$resultsFile")
@@ -51,6 +51,7 @@ object Score extends Score with App {
   //  val correctAnswersFile = "answer_truth.xlsx"
 
   val resultsFile = "Results.csv"
+  val rawResultsFile = "raw_results.csv"
   val answerStructureFile = "answer_structure.csv"
 
 

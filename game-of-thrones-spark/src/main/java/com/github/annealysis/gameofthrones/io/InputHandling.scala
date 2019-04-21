@@ -125,13 +125,15 @@ object InputHandling {
   }
 
 
-  def readExcel(fileName: String)(implicit spark: SparkSession): DataFrame = spark.read
-    .format("com.crealytics.spark.excel")
-    // .option("dataAddress", sheet) // Required
-    .option("useHeader", "true")
-    .option("treatEmptyValuesAsNulls", "true")
-    .option("inferSchema", "true")
-    .option("addColorColumns", "False")
-    .load(fileName)
+  def readExcel(fileName: String)(implicit spark: SparkSession): DataFrame = {
+    spark.read
+      .format("com.crealytics.spark.excel")
+      // .option("dataAddress", sheet) // Required
+      .option("useHeader", "true")
+      .option("treatEmptyValuesAsNulls", "true")
+      .option("inferSchema", "true")
+      .option("addColorColumns", "False")
+      .load(fileName)
+  }
 
 }
