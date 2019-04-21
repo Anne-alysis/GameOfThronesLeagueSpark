@@ -9,7 +9,7 @@ object OutputHandling {
     df
   }
 
-  def writeScoresToFile()(implicit spark: SparkSession): Unit = {
+  def writeScoresToFile(df: DataFrame)(implicit spark: SparkSession): Unit = {
 
 
 
