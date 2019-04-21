@@ -6,13 +6,13 @@ jar=SCRUBBED
 localpath=SCRUBBED
 
 week=1
-createanswerflag=false
+createquestionstructure=false
 
 cluster=SCRUBBED
 class=com.github.annealysis.gameofthrones.Score
 
 # clean up old jars
-set +e; gsutil -m rm -rf ${path}/{jarname}; set -e; sleep 1
+set +e; gsutil -m rm -rf ${path}/${jarname}; set -e; sleep 1
 
 # push our new jar
 gsutil -m cp ${localpath}/target/${jarname} ${jar}
@@ -26,5 +26,5 @@ gcloud dataproc jobs submit spark \
     --class=${class} \
     -- ${path} \
     ${week} \
-    ${createanswerflag}
+    ${createquestionstructure}
 

@@ -9,7 +9,7 @@ class Score extends StrictLogging with Spark {
 
   import Score._
 
-  def run(bucket: String, week: Int, createAnswerFlag: Boolean): Unit = {
+  def run(bucket: String, week: Int, createQuestionStructure: Boolean): Unit = {
 
     logger.info(s"This is episode ${week}.")
 
@@ -19,7 +19,7 @@ class Score extends StrictLogging with Spark {
     responsesDF.show(5)
     questionsDF.show(5)
 
-    if (createAnswerFlag) {
+    if (createQuestionStructure) {
       logger.info("Writing answer structure file... ")
       InputHandling.writeAnswerStructure(questionsDF, s"$bucket/$answerStructureFile")
     }
@@ -46,19 +46,19 @@ class Score extends StrictLogging with Spark {
 
 object Score extends Score with App {
 
-  val responsesFile = "FantasyGameofThronesResponses.csv"
-  val correctAnswersFile = "answer_testing.xlsx"
-  //  val correctAnswersFile = "answer_truth.xlsx"
+  val responsesFile = "fantasy_game_of_thrones_responses.csv"
+  val correctAnswersFile = "correct_answer_testing.xlsx"
+  //  val correctAnswersFile = "correct_answers.xlsx"
 
-  val resultsFile = "Results.csv"
+  val resultsFile = "results.csv"
   val rawResultsFile = "raw_results.csv"
-  val answerStructureFile = "answer_structure.csv"
+  val answerStructureFile = "question_structure.csv"
 
 
   run(
     bucket = args(0),
     week = args(1).toInt,
-    createAnswerFlag = args(2).toBoolean
+    createQuestionStructure = args(2).toBoolean
   )
 
 
