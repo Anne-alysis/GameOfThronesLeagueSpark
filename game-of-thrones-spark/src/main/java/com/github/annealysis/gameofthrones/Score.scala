@@ -55,9 +55,7 @@ object Score extends Score with App {
 
   run(
     bucket = args(0),
-    week = args(1).toInt,
-    createQuestionStructure = args(2).toBoolean
-  )
+    week = args(1).toInt)
 
 
 }
