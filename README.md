@@ -1,15 +1,19 @@
 # GameOfThronesLeagueSpark
 Spark version of https://github.com/Anne-alysis/GameOfThronesLeague (without plotting).
 
-Note: this will not be able to be run without modifications for your particular cluster and storage system.  This assumes the Spark job will be run remotely on a Dataproc cluster in Google Cloud (via the non-scrubbed version of `game-of-thrones-spark/etc/run-github.sh`) using GCS buckets for storage.  
+Note 1) this will not be able to be run without modifications for your particular cluster and storage system.  
+This assumes the Spark job will be run remotely on a Dataproc cluster using Google Cloud Project (via the non-scrubbed 
+version of `game-of-thrones-spark/etc/run-github.sh`) using Google Cloud Storage (GCS) buckets for storage.    
 
+Note 2) file names and locations below are for reference only, in the `resources` folder.  Actual files 
+for running the jar are all stored in and written to GCS buckets.  
 
 # Introduction
 
 In honor of the final season of Game of Thrones, we put together a fantasy league!  Each participant fills
 out a form we developed before the start of the season. Week by week, possible answers to each question are updated, and 
 are scored by an algorithm. I developed the scoring algorithm that is in this repo. The form itself is accessible by Google 
-forms and is not included here. Questions and current correct answers can be viewed in the file, `./external-files/answer_truth.xlsx`. 
+forms and is not included here. Questions and current correct answers can be viewed in the file, `game-of-thrones-spark/src/main/resources/correct_answers.xlsx`. 
 
 Example questions include:
  
@@ -24,15 +28,16 @@ At the end of the season, the top ranked team wins a prize and the Iron Throne.
 
 This code will be run weekly and scores recalculated based on new information in each week's episode.  Week by 
 week the correct answers will be updated, and responses re-evaluated against changing information (e.g., 
-a character dies).
+a character dies).  The path for files below is `game-of-thrones-spark/src/main/resources/` and are given for context 
+only.  All files to run the jar are stored and accessed from GCS.  
 
-1) The code reads in the responses from a downloaded CSV (`./external-files/Fantasy Game of Thrones Responses.csv`)
+1) The code reads in the responses from a downloaded CSV (`fantasy_game_of_thrones_responses.csv`)
 2) Responses are reshaped to allow for ease of scoring
-3) Answers from a Excel sheet are read in (`./external-files/answer_truth.xlsx`)
-4) Scores are computed 
-5) Scores are written to a CSV (`./external-files/Results.csv`), including the previous weeks' scores/ranks/rank movement, if applicable.  
+3) Answers from a Excel sheet are read in (`correct_answers.xlsx`)
+4) Scores are computed and unaggregated results written (`raw_results.csv`)
+5) Scores are written to a CSV (`results.csv`), including the previous weeks' scores/ranks/rank movement, if applicable.  
 
-Note, the algorithm was tested with a mock answer sheet as well (`./external-files/answer_testing.xlsx`).
+Note, the algorithm was tested with a mock answer sheet as well (`correct_answer_testing.xlsx`).
 
 # Running the code
 
