@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions.col
 
 object OutputHandling {
 
-  def combinePreviousScores(df: DataFrame, week: Int, bucketPath: String)(implicit spark: SparkSession): DataFrame = {
+  def combinePreviousScores(df: DataFrame, week: Int, bucket: String, fileName: String)(implicit spark: SparkSession): DataFrame = {
 
     val now = LocalDate.now(ZoneId.of("America/Los_Angeles"))
 
@@ -19,18 +19,18 @@ object OutputHandling {
 
     if (week == 1) return renamedDF
 
-    val oldResultsDF = spark.read.option("header", "true").csv(bucketPath)
+    val oldResultsDF = spark.read.option("header", "true").csv(s"$bucket/$fileName")
 
     // save results for posterity
-    val resultsFileSplit = bucketPath.split("\\.")(0)
+    val resultsFileSplit = fileName.split("\\.")(0)
     oldResultsDF.repartition(1).write
-      .mode("overwrite").option("header", "true").csv(s"${resultsFileSplit}_$now.csv")
+      .mode("overwrite").option("header", "true").csv(s"$bucket/archive/${resultsFileSplit}_$now.csv")
 
-    // include movement of rank from week to week
+    // include movement of rank from week to week (negative because lower rank is better
     val movementName = "Movement from Previous Episode"
     val oldResultsDroppedDF = oldResultsDF.drop(movementName)
     val combinedResultsDF = renamedDF.join(oldResultsDroppedDF, Seq("Team", "Iron Bank"), "left")
-      .withColumn(movementName, col(s"Episode $week Rank") - col(s"Episode ${week - 1} Rank"))
+      .withColumn(movementName, - (col(s"Episode $week Rank") - col(s"Episode ${week - 1} Rank")))
 
     // rearrange movement column to be in the middle, not at the end
     val colNames = combinedResultsDF.columns

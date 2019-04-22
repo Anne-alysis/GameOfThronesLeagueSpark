@@ -27,7 +27,7 @@ class Score extends StrictLogging with Spark {
 
     logger.info("Combining previous weeks' scores, if applicable ... ")
     val combinedWeeksScoreDF = OutputHandling.combinePreviousScores(
-      scoredDF, week, s"$bucket/archive/$resultsFile")
+      scoredDF, week, bucket, resultsFile)
 
     logger.info("Writing output to file... ")
     OutputHandling.writeScoresToFile(combinedWeeksScoreDF, s"$bucket/$resultsFile")
