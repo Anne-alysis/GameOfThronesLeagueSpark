@@ -6,8 +6,34 @@ import org.apache.spark.sql.functions.{col, concat, format_string, lit, split, t
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+/** Handles reading in of each type of data */
 object InputHandling extends StrictLogging {
 
+
+  /** Returns cleaned responses from raw responses.
+    *
+    * Note: behavior differs depending on value of `week`
+    *
+    * Week 1:
+    * For the teams' responses, actual question text is scrubbed, and questions are separated into their own DataFrame,
+    * `questionsDF`.  Instead of the raw text in the response DataFrame, for clarity the question identifiers are
+    * converted into "QXX", where "XX" is the question number.  Each question is a column in the raw import,
+    * so the questions are melted so that each team/question combination comprises its own row.  The output is written
+    * to a file so these steps can be circumvented in subsequent weeks.
+    *
+    * The `questionsDF` is cleaned to extract the point value to its own column and to remove the point values from
+    * the question text.  This cleaned structure is written to an output file as a template to update correct answers
+    * week over week.
+    *
+    * Week > 1:
+    * Simply reads in the cleaned data that has been scrubed and saved in week 1.
+    *
+    * @param week           : week/episode number
+    * @param responsesFiles : sequence of input file paths
+    * @param spark          : implicit spark session created in Score.scala
+    * @return melted and cleaned responses
+    *
+    */
   def apply(week: Int, responsesFiles: Seq[String])(implicit spark: SparkSession): DataFrame = {
 
     // read in previously formed file, if not first week
@@ -31,19 +57,32 @@ object InputHandling extends StrictLogging {
 
     val meltDF = Utilities.melt(renamedDF, colsToKeep, colsToMelt, newCols)
 
-    val finalDF = splitHybridQuestion(meltDF)
+    val finalResponseDF = splitHybridQuestion(meltDF)
 
     // write out restructured file for reading in subsequent weeks
-    finalDF.repartition(1)
+    finalResponseDF.repartition(1)
       .write
       .mode("overwrite")
       .option("header", "true")
       .csv(responsesFiles(2))
 
-    finalDF
+    finalResponseDF
 
   }
 
+
+  /** returns a cleaned and bare DataFrame comprised only of questions and their properties.
+    *
+    * Some questions contain a person listed after the point values in square brackets.  After points are extracted
+    * via the `getPoints` method, this person text is added back into the question.
+    *
+    * e.g., "Does Arya personally kill the following characters on her list (1 point each) [Cersei Lannister]"
+    * becomes "Does Arya personally kill the following characters on her list [Cersei Lannister]"
+    *
+    * @param df    : the initial raw response DataFrame with questions to be extracted
+    * @param spark : implicit spark session created in Score.scala
+    * @returns DataFrame of questions only, including columns for points and question numbers
+    */
   def extractQuestions(df: DataFrame)(implicit spark: SparkSession): DataFrame = {
 
     import spark.implicits._
@@ -78,6 +117,12 @@ object InputHandling extends StrictLogging {
 
   }
 
+
+  /** returns a column of point values per question
+    *
+    * @param df : a dataframe with questions as a single column, including the point value
+    * @returns the point values as a separate column
+    */
   def getPoints(df: DataFrame): DataFrame = {
 
     df
@@ -90,6 +135,12 @@ object InputHandling extends StrictLogging {
   }
 
 
+  /** returns a renamed dataframe with full text questions renamed as "QXX", where "XX" is the (potentially padded)
+    * number (e.g., "01", "13")
+    *
+    * @param df : raw response dataframe
+    * @return dataframe with question columns renamed
+    */
   def renameColumns(df: DataFrame): DataFrame = {
 
     val questionCount = df.columns.length - 4
@@ -102,6 +153,16 @@ object InputHandling extends StrictLogging {
   }
 
 
+  /** returns a dataframe with question 26 split into two rows per team
+    *
+    * Question 26 allows for a team to write in two responses in the format: "X kills Y. Z kills K."  This is
+    * difficult to score, given the scoring UDF, so the responses is split into two rows: "X kills Y" and "Z kills K"
+    * for each row.
+    *
+    * @param df    : melted, mostly cleaned responses data frame
+    * @param spark : implicit spark session created in Score.scala
+    * @return DataFrame with multiple rows per team for question 26.
+    */
   def splitHybridQuestion(df: DataFrame)(implicit spark: SparkSession): DataFrame = {
     import spark.implicits._
 
@@ -132,6 +193,11 @@ object InputHandling extends StrictLogging {
   }
 
 
+  /** writes the cleaned questions to a file for ease of updating correct answers week by week
+    *
+    * @param df         : cleaned question DataFrame
+    * @param bucketPath : GCS bucket path to write the output to
+    */
   def writeAnswerStructure(df: DataFrame, bucketPath: String): Unit = {
     df.
       repartition(1)
@@ -142,6 +208,12 @@ object InputHandling extends StrictLogging {
   }
 
 
+  /** returns correct answer dataframe, read from Excel file on GCS
+    *
+    * @param fileName : GCS bucket path for excel file
+    * @param spark    : implicit spark session created in Score.scala
+    * @return DataFrame of correct answers per question
+    */
   def readExcel(fileName: String)(implicit spark: SparkSession): DataFrame = {
     spark.read
       .format("com.crealytics.spark.excel")
