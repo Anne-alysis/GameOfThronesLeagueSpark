@@ -36,14 +36,14 @@ object InputHandling extends StrictLogging {
     */
   def apply(week: Int, responsesFiles: Seq[String])(implicit spark: SparkSession): DataFrame = {
 
-    // read in previously formed file, if not first week
+    // read in and return previously formed file, if not first week
     if (week > 1) {
       logger.info("Reading in previously reshaped response file... ")
       return spark.read.option("header", "true").csv(responsesFiles(2))
     }
 
-    //otherwise, reshape the responses
-    val initialDF = spark.read.option("header", "true").csv(responsesFiles(0)).drop("Timestamp")
+    //if week == 1, reshape the responses and create answer sheet
+    val initialDF = spark.read.option("header", "true").csv(responsesFiles.head).drop("Timestamp")
 
     val questionsDF = extractQuestions(initialDF)
     writeAnswerStructure(questionsDF, responsesFiles(1))
@@ -81,7 +81,7 @@ object InputHandling extends StrictLogging {
     *
     * @param df    : the initial raw response DataFrame with questions to be extracted
     * @param spark : implicit spark session created in Score.scala
-    * @returns DataFrame of questions only, including columns for points and question numbers
+    * @return DataFrame of questions only, including columns for points and question numbers
     */
   def extractQuestions(df: DataFrame)(implicit spark: SparkSession): DataFrame = {
 
@@ -121,7 +121,7 @@ object InputHandling extends StrictLogging {
   /** returns a column of point values per question
     *
     * @param df : a dataframe with questions as a single column, including the point value
-    * @returns the point values as a separate column
+    * @return the point values as a separate column
     */
   def getPoints(df: DataFrame): DataFrame = {
 

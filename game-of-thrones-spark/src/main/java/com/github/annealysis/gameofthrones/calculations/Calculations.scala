@@ -37,7 +37,7 @@ object Calculations {
     * @param multipleAnswers : boolean for if the question potentially has more than one correct answer
     * @param answer          : team's response to question
     * @param correctAnswer   : correct answer
-    * @returns true if answer is correct
+    * @return true if answer is correct
     */
   val checkCorrectUDF = udf((include: Boolean, multipleAnswers: Boolean, answer: String, correctAnswer: String) => {
 
@@ -62,7 +62,7 @@ object Calculations {
   /** helper function for checkCorrectUDF to clean string by lowering letters and removing punctuation
     *
     * @param answer : uncleaned response for a team
-    * @returns cleaned response
+    * @return cleaned response
     */
   def mungeAnswers(answer: String): String = {
     answer
@@ -74,7 +74,7 @@ object Calculations {
   /** aggregates responses to the team level and ranks teams
     *
     * @param df : DataFrame with a score for each question and team
-    * @returns DataFrame with score summed and ranked for each team
+    * @return DataFrame with score summed and ranked for each team
     */
   def aggregateResults(df: DataFrame): DataFrame = {
 
