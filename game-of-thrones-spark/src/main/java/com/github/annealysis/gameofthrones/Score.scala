@@ -24,8 +24,6 @@ class Score extends StrictLogging with Spark {
     val inputFilesWithBucket = inputFiles.map(i => s"$bucket/${i}")
     val responsesDF = InputHandling(week, inputFilesWithBucket)
 
-    responsesDF.show(5)
-
     logger.info("Reading in correct answers...")
     val correctAnswerDF = InputHandling.readExcel(s"$bucket/$correctAnswersFile")
 
@@ -33,8 +31,7 @@ class Score extends StrictLogging with Spark {
     val scoredDF = Calculations(responsesDF, correctAnswerDF, s"$bucket/archive/$rawResultsFile")
 
     logger.info("Combining previous weeks' scores, if applicable ... ")
-    val combinedWeeksScoreDF = OutputHandling.combinePreviousScores(
-      scoredDF, week, bucket, resultsFile)
+    val combinedWeeksScoreDF = OutputHandling.combinePreviousScores(scoredDF, week, bucket, resultsFile)
 
     logger.info("Writing output to file... ")
     OutputHandling.writeScoresToFile(combinedWeeksScoreDF, s"$bucket/$resultsFile")
@@ -55,16 +52,14 @@ object Score extends Score with App {
   val inputFiles = Seq(responsesFile, answerStructureFile, reshapedResponsesFile)
 
   // file updated week-by-week with new correct answers, whose structure is generated from `answerStructureFile`
-  //val correctAnswersFile = "correct_answer_testing.xlsx"
   val correctAnswersFile = "correct_answers.xlsx"
 
   val resultsFile = "results.csv" // scores and ranks aggregated by team
   val rawResultsFile = "raw_results.csv" // unaggregated scores
 
-
   run(
     bucket = args(0),
-    week = args(1).toInt)
-
+    week = args(1).toInt
+  )
 
 }
