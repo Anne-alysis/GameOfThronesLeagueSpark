@@ -68,11 +68,9 @@ A custom DataFrame melt method is stored here that transforms wide data into lon
 ## `io` package
 ### `InputHandling.scala`
 
-This object handles all the input operations, such as:
- * Reading in responses and reshaping that data 
-    * If `week == 1`, the raw data will be reshaped and written to a file.  For subsequent weeks,
-    this data will be read in from this file, instead of being reshaped each time, which is inefficient and unnecessary.
- * Creating the structure of the question sheet, for first week only.  
+This object handles all the running of all the input operations and applying the objects in the 
+`transformations` package.  
+
  
  ### `OutputHandling.scala`
 
@@ -80,6 +78,21 @@ This object handles all the output operations, such as:
 * Combining previous weeks' results (if `week > 1`)
  * Writing out the results
  
+ ## `io/transformations` package
+ Contains objects that transform the raw responses and the questions themselves.
+ 
+ ### `Responses.scala`
+ Depending on the week, different actions are taken: 
+ 
+   * `week == 1`: Reading in responses, reshaping that data, and write the data to a file 
+   * `week > 1`: This data will be read in from this file produced in `week == 1`, instead of being reshaped each time,
+    which is inefficient and unnecessary.
+  
+ 
+ ### `Questions.scala`
+ Creates the structure of the correct answer template by reshaping the questions using the raw responses
+ input file as a base.  
+
  ## `calculations` package
 ### `Calculations.scala`
 This object includes the methods for scoring.  Most are exact match algorithms, but
