@@ -18,10 +18,10 @@ class Score extends StrictLogging with Spark {
     */
   def run(bucket: String, week: Int): Unit = {
 
-    logger.info(s"This is episode ${week}.")
+    logger.info(s"This is episode $week.")
 
     logger.info("Reading in responses...")
-    val inputFilesWithBucket = inputFiles.map(i => s"$bucket/${i}")
+    val inputFilesWithBucket = inputFiles.map(i => s"$bucket/$i")
     val responsesDF = InputHandling(week, inputFilesWithBucket)
 
     logger.info("Reading in correct answers...")
