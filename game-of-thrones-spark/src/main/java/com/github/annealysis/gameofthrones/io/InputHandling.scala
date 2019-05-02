@@ -26,26 +26,29 @@ object InputHandling extends StrictLogging {
     *
     * Week > 1:
     * Simply reads in the cleaned data that has been scrubed and saved in week 1.
-    **
-    * @param week          : week/episode number
-    * @param responseFiles : sequence of input file paths
-    * @param spark         : implicit spark session created in Score.scala
+    * *
+    *
+    * @param week                  : week/episode number
+    * @param responseFile          : raw response file
+    * @param answerStructureFile   : structure of answer sheet with no responses
+    * @param reshapedResponsesFile : melted and cleaned raw response file
+    * @param spark                 : implicit spark session created in Score.scala
     * @return melted and cleaned responses
     *
     */
-  def apply(week: Int, responseFiles: Seq[String])(implicit spark: SparkSession): DataFrame = {
+  def apply(week: Int, responseFile: String, answerStructureFile: String, reshapedResponsesFile: String)(implicit spark: SparkSession): DataFrame = {
 
     // read in and return previously formed file, if not first week
     if (week > 1) {
       logger.info("Reading in previously reshaped response file... ")
-      return spark.read.option("header", "true").csv(responseFiles(2))
+      return spark.read.option("header", "true").csv(reshapedResponsesFile)
     }
 
-    val rawResponsesDF = spark.read.option("header", "true").csv(responseFiles.head).drop("Timestamp")
+    val rawResponsesDF = spark.read.option("header", "true").csv(responseFile).drop("Timestamp")
 
-    Questions(rawResponsesDF, responseFiles(1))
+    Questions(rawResponsesDF, answerStructureFile)
 
-    Responses(rawResponsesDF, responseFiles(2))
+    Responses(rawResponsesDF, reshapedResponsesFile)
 
   }
 

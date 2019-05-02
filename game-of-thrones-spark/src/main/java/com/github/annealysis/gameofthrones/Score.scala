@@ -21,14 +21,14 @@ class Score extends StrictLogging with Spark {
     logger.info(s"This is episode $week.")
 
     logger.info("Reading in responses...")
-    val inputFilesWithBucket = inputFiles.map(i => s"$bucket/$i")
-    val responsesDF = InputHandling(week, inputFilesWithBucket)
+
+    val responsesDF = InputHandling(week, responseFile(bucket), answerStructureFile(bucket), reshapedResponsesFile(bucket))
 
     logger.info("Reading in correct answers...")
-    val correctAnswerDF = InputHandling.readExcel(s"$bucket/$correctAnswersFile")
+    val correctAnswerDF = InputHandling.readExcel(correctAnswersFile(bucket))
 
     logger.info("Scoring the responses... ")
-    val scoredDF = Calculations(responsesDF, correctAnswerDF, s"$bucket/archive/$rawResultsFile")
+    val scoredDF = Calculations(responsesDF, correctAnswerDF, rawResultsFile(bucket))
 
     logger.info("Combining previous weeks' scores, if applicable ... ")
     val combinedWeeksScoreDF = OutputHandling.combinePreviousScores(scoredDF, week, bucket, resultsFile)
@@ -40,22 +40,24 @@ class Score extends StrictLogging with Spark {
 
   }
 
+
+
 }
 
 
 /** Companion object to Score.scala that stores file names and triggers the `run` method.  */
 object Score extends Score with App {
 
-  val responsesFile = "fantasy_game_of_thrones_responses.csv" // raw download of team responses from Google form
-  val answerStructureFile = "question_structure.csv" // file to write the structure of the questions
-  val reshapedResponsesFile = "reshaped_responses.csv" // file saved during week 1, to be read in during subsequent weeks
-  val inputFiles = Seq(responsesFile, answerStructureFile, reshapedResponsesFile)
+  def responseFile(bucket: String): String = s"$bucket/fantasy_game_of_thrones_responses.csv" // raw download of team responses from Google form
+  def answerStructureFile(bucket: String): String = s"$bucket/question_structure.csv"  // file to write the structure of the questions
+  def reshapedResponsesFile(bucket: String): String = s"$bucket/reshaped_responses.csv" // file saved during week 1, to be read in during subsequent weeks
 
   // file updated week-by-week with new correct answers, whose structure is generated from `answerStructureFile`
-  val correctAnswersFile = "correct_answers.xlsx"
+  def correctAnswersFile(bucket: String): String = s"$bucket/correct_answers.xlsx"
+  def rawResultsFile(bucket: String): String = s"$bucket/archive/raw_results.csv" // unaggregated scores
 
   val resultsFile = "results.csv" // scores and ranks aggregated by team
-  val rawResultsFile = "raw_results.csv" // unaggregated scores
+
 
   run(
     bucket = args(0),
