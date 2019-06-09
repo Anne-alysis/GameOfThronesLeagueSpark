@@ -1,7 +1,8 @@
 package com.github.annealysis.gameofthrones
 
 import com.github.annealysis.gameofthrones.calculations.Calculations
-import com.github.annealysis.gameofthrones.common.Spark
+import com.github.annealysis.gameofthrones.common.Configuration.FileNames
+import com.github.annealysis.gameofthrones.common.{Configuration, Spark}
 import com.github.annealysis.gameofthrones.io.{InputHandling, OutputHandling}
 import com.typesafe.scalalogging.StrictLogging
 
@@ -20,27 +21,27 @@ class Score extends StrictLogging with Spark {
 
     logger.info(s"This is episode $week.")
 
-    logger.info("Reading in responses...")
+    logger.info("Reading in configuration file ...")
+    val fileNames: FileNames = Configuration.getFileNames(bucket, yamlFileName)
 
-    val responsesDF = InputHandling(week, responseFile(bucket), answerStructureFile(bucket), reshapedResponsesFile(bucket))
+    logger.info("Reading in responses...")
+    val responsesDF = InputHandling(week, fileNames.responseFile, fileNames.answerStructureFile, fileNames.reshapedResponsesFile)
 
     logger.info("Reading in correct answers...")
-    val correctAnswerDF = InputHandling.readExcel(correctAnswersFile(bucket))
+    val correctAnswerDF = InputHandling.readExcel(fileNames.correctAnswersFile)
 
     logger.info("Scoring the responses... ")
-    val scoredDF = Calculations(responsesDF, correctAnswerDF, rawResultsFile(bucket))
+    val scoredDF = Calculations(responsesDF, correctAnswerDF, fileNames.rawResultsFile)
 
     logger.info("Combining previous weeks' scores, if applicable ... ")
-    val combinedWeeksScoreDF = OutputHandling.combinePreviousScores(scoredDF, week, bucket, resultsFile)
+    val combinedWeeksScoreDF = OutputHandling.combinePreviousScores(scoredDF, week, bucket, fileNames.resultsFile)
 
     logger.info("Writing output to file... ")
-    OutputHandling.writeScoresToFile(combinedWeeksScoreDF, s"$bucket/$resultsFile")
+    OutputHandling.writeScoresToFile(combinedWeeksScoreDF, s"$bucket/${fileNames.resultsFile}")
 
     logger.info("Done! ")
 
   }
-
-
 
 }
 
@@ -48,16 +49,7 @@ class Score extends StrictLogging with Spark {
 /** Companion object to Score.scala that stores file names and triggers the `run` method.  */
 object Score extends Score with App {
 
-  def responseFile(bucket: String): String = s"$bucket/fantasy_game_of_thrones_responses.csv" // raw download of team responses from Google form
-  def answerStructureFile(bucket: String): String = s"$bucket/question_structure.csv"  // file to write the structure of the questions
-  def reshapedResponsesFile(bucket: String): String = s"$bucket/reshaped_responses.csv" // file saved during week 1, to be read in during subsequent weeks
-
-  // file updated week-by-week with new correct answers, whose structure is generated from `answerStructureFile`
-  def correctAnswersFile(bucket: String): String = s"$bucket/correct_answers.xlsx"
-  def rawResultsFile(bucket: String): String = s"$bucket/archive/raw_results.csv" // unaggregated scores
-
-  val resultsFile = "results.csv" // scores and ranks aggregated by team
-
+  val yamlFileName = "got.yaml"
 
   run(
     bucket = args(0),

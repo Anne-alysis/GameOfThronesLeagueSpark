@@ -29,7 +29,8 @@ At the end of the season, the top ranked team wins a prize and the Iron Throne.
 This code will be run weekly and scores recalculated based on new information in each week's episode.  Week by 
 week the correct answers will be updated, and responses re-evaluated against changing information (e.g., 
 a character dies).  The path for files below is `game-of-thrones-spark/src/main/resources/` and are given for context 
-only.  All files to run the jar are stored and accessed from GCS.  
+only.  All files to run the jar are stored and accessed from GCS, including the YAML configuration file which lists 
+the names of each file to be used.  
 
 1) The code reads in the responses from a downloaded CSV (`fantasy_game_of_thrones_responses.csv`)
 2) Responses are reshaped to allow for ease of scoring
@@ -52,9 +53,12 @@ After replacing the scrubbed variables in the script, it can be run via:
 # Classes
 ## `Score.scala`
 
-This is the main class which includes all steps outlined above.  It includes a companion object that stores the filenames and reads in the arguments from the shell script: storage bucket (`bucket`) and week (`week`).  
+This is the main class which includes each main step outlined above.  It includes a companion object that stores the name of the 
+YAML configuration file (where all file names are stored), which are then read from the main class.  This class also reads in 
+the arguments from the shell script: storage bucket (`bucket`) and week (`week`).  
 
-The class (not companion object) extends a trait in `common/Utilities.scala` that creates the Spark session, which is then passed implicitly to all other methods that require a Spark session.  
+The class (not companion object) extends a trait in `common/Utilities.scala` that creates the Spark session, which is 
+then passed implicitly to all other methods that require a Spark session.  
 
 ## `common` package
 

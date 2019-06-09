@@ -1,0 +1,6 @@
+responseFile: "fantasy_game_of_thrones_responses.csv" # download of team responses from Google form
+answerStructureFile: "question_structure.csv"         # to write the structure of the questions
+reshapedResponsesFile: "reshaped_responses.csv"       # saved during week 1, to be read in during subsequent weeks
+correctAnswersFile: "correct_answers.xlsx"            # updated week-by-week with new correct answers; structure generated from `answerStructureFile`
+rawResultsFile: "archive/raw_results.csv"             # unaggregated scores of current week
+resultsFile: "results.csv"                            # final scores

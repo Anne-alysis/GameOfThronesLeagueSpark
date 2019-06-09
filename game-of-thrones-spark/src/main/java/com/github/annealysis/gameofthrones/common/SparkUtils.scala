@@ -2,9 +2,9 @@ package com.github.annealysis.gameofthrones.common
 
 import org.apache.spark.sql.SparkSession
 
-/*
+/** Creates a spark session with desired parameters.
 
-Note: this is not my code but borrowed from Dane G so the program can run.
+Note: this is NOT my code but borrowed from Dane G so the program can run.
 
  */
 
