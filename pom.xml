@@ -17,7 +17,8 @@
 
         <scala.base.version>2.11</scala.base.version>
         <scala.version>${scala.base.version}.7</scala.version>
-
+        <jackson.version>2.9.9</jackson.version>
+        
         <!-- Spark Versions -->
         <spark.version>2.3.1</spark.version>
         <hadoop.version>2.9.0</hadoop.version>
